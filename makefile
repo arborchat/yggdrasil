@@ -1,5 +1,5 @@
 CC=musl-gcc
-CFLAGS=-static -g
+CFLAGS=-static -g -pedantic -Wall -Wextra
 OBJS=ygg.o json.o
 
 ygg: $(OBJS)
