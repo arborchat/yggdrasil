@@ -4,7 +4,7 @@
 // for read
 #include <unistd.h>
 
-// for memset
+// for memset and strlen
 #include <string.h>
 
 // for _Bool
@@ -26,6 +26,7 @@
 // it for the next invocation.
 char *read_line(int fd, int *bytes_read) {
     static char *excess = NULL;
+    static int excess_size = 0;
     char * read_buf = (char *) malloc(READ_BUF_SIZE * sizeof(char));
     memset(read_buf, 0, READ_BUF_SIZE);
     int index = 0;
@@ -33,13 +34,16 @@ char *read_line(int fd, int *bytes_read) {
     _Bool newline_found = false;
     for (; index <= num_read; index++) {
 	if (read_buf[index] == '\n') {
-    		read_buf[index] = '\0';
-    		newline_found = true;
-    		break;
+            read_buf[index] = '\0';
+            newline_found = true;
+            break;
 	}
     }
     if (newline_found) {
-        *bytes_read = index;
+        excess_size = num_read - (index+1);
+        excess = (char *) malloc(excess_size * sizeof(char));
+        memcpy(excess, read_buf + index + 1, excess_size);
+        *bytes_read = strlen(read_buf);
         return read_buf;
     }
     *bytes_read = 0;
