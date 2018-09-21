@@ -24,13 +24,13 @@
 // 
 // This function is not thread-safe. When it reads data past a newline, it buffers
 // it for the next invocation.
-char *read_line(int fd, int *bytes_read) {
+char *read_line(int fd, size_t *bytes_read) {
     static char *excess = NULL;
-    static int excess_size = 0;
+    static size_t excess_size = 0;
     char * read_buf = (char *) malloc(READ_BUF_SIZE * sizeof(char));
     memset(read_buf, 0, READ_BUF_SIZE);
-    int index = 0;
-    int num_read = read(fd, read_buf, READ_BUF_SIZE);
+    unsigned int index = 0;
+    size_t num_read = read(fd, read_buf, READ_BUF_SIZE);
     _Bool newline_found = false;
     for (; index <= num_read; index++) {
 	if (read_buf[index] == '\n') {

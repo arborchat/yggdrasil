@@ -1,7 +1,9 @@
 #ifndef protocol_h_INCLUDED
 #define protocol_h_INCLUDED
 
-char *read_line(int fd, int *bytes_read);
+#include <sys/types.h>
+
+char *read_line(int fd, size_t *bytes_read);
 
 #endif // protocol_h_INCLUDED
 
