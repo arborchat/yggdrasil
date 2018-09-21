@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "cutest-1.5/CuTest.h"
 
 CuSuite* ygg_get_protocol_suite();
