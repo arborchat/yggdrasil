@@ -1,12 +1,12 @@
 #include "cutest-1.5/CuTest.h"
 
-CuSuite* ygg_get_suite();
+CuSuite* ygg_get_protocol_suite();
 
 void RunAllTests(void) {
     CuString *output = CuStringNew();
     CuSuite* suite = CuSuiteNew();
 
-    CuSuiteAddSuite(suite, ygg_get_suite());
+    CuSuiteAddSuite(suite, ygg_get_protocol_suite());
 
     CuSuiteRun(suite);
     CuSuiteSummary(suite, output);
