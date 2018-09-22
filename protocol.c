@@ -10,6 +10,9 @@
 // for _Bool
 #include <stdbool.h>
 
+// for json_parse and friends
+#include "json-parser/json.h"
+
 #include "protocol.h"
 
 #define READ_BUF_SIZE 1024
@@ -63,3 +66,37 @@ char *read_line(FILE *input, size_t *bytes_read) {
     return "";
 }
 
+_Bool extract_welcome(json_value *json, arbor_msg_t *msg) {
+}
+
+// parse_arbor_message extracts the JSON string in `text` into the struct
+// `msg`. It returns true if it succeeded and false if it failed.
+_Bool parse_arbor_message(char *text, arbor_msg_t* msg) {
+    _Bool result = false;
+    json_value *parsed = json_parse(text, strlen(text));
+    if (parsed->type != json_object) {
+        goto end;
+    }
+    // find the message type
+    for (unsigned int i = 0; i < parsed->u.object.length; i++) {
+        if (strncmp("Type",parsed->u.object.values[i].name, parsed->u.object.values[i].name_length) == 0) {
+            if (parsed->u.object.values[i].value->type != json_integer) {
+                goto end;
+            }
+            msg->type = parsed->u.object.values[i].value->u.integer;
+            break;
+        }
+    }
+    switch (msg->type) {
+        case ARBOR_WELCOME:
+            result = extract_welcome(parsed, msg);
+            break;
+        default:
+            goto end;
+    }
+end:
+    json_value_free(parsed);
+    return result;
+}
+// _Bool read_arbor_message(FILE *input, arbor_msg_t* msg) {
+// }

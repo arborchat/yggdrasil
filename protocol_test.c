@@ -103,11 +103,27 @@ void test_read_line_too_long(CuTest *tc) {
 	fclose(tempfile);
 }
 
+void test_parse_welcome(CuTest *tc) {
+    arbor_msg_t msg;
+    memset(&msg, 0, sizeof(arbor_msg_t));
+    CuAssertTrue(tc, parse_arbor_message(YGG_WELCOME_TEXT, &msg));
+    CuAssertIntEquals(tc, ARBOR_WELCOME, msg.type);
+    CuAssertStrEquals(tc, "abf07434-230c-4a69-5602-c3bdb6870954", msg.root);
+    CuAssertIntEquals(tc, 0, msg.major);
+    CuAssertIntEquals(tc, 1, msg.minor);
+    CuAssertTrue(tc, msg.recent_len >= 0);
+    CuAssertPtrNotNull(tc, msg.recent);
+    for (int i = 0; i < msg.recent_len; i++) {
+        CuAssertStrEquals(tc, "", msg.recent[i]);
+    }
+}
+
 CuSuite* ygg_get_protocol_suite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_read_line);
     SUITE_ADD_TEST(suite, test_read_line_EOF);
     SUITE_ADD_TEST(suite, test_read_line_multi);
     SUITE_ADD_TEST(suite, test_read_line_long);
+    SUITE_ADD_TEST(suite, test_parse_welcome);
     return suite;
 }
