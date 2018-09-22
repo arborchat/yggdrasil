@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -17,6 +18,7 @@ int main(int argc, char* argv[]) {
     tcp_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_sock < 0) {
         perror("socket");
+        exit(1);
     }
 
     // configure server address information
@@ -24,11 +26,13 @@ int main(int argc, char* argv[]) {
     addr.sin_port = htons(7777);
     if (1 != inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr)) {
         perror("Invalid IP");
+        exit(1);
     }
 
     // connect to server
     if (0 != connect(tcp_sock, (struct sockaddr*) &addr, sizeof(struct sockaddr_in))) {
         perror("Failed to connect to server");
+        exit(1);
     }
     printf("Connection successful\n");
 
