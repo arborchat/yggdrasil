@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
     printf("Connection successful\n");
 
     // communicate
-    int num_read;
-    printf("%s\n", read_line(tcp_sock, &num_read));
+    size_t num_read;
+    FILE *sockfile = fdopen(tcp_sock, "rw");
+    printf("%s\n", read_line(sockfile, &num_read));
 }
