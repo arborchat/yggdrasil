@@ -19,9 +19,14 @@
 // It returns a pointer to the null-terminated string containing the text, and sets the
 // value of bytes_read to indicate the length of the string that it returned (like
 // `strlen()`, this does not count the terminating null byte).
+// 
 // The returned string is dynamically allocated and must be `free()`ed.
+// 
 // If the file stream returns EOF before a newline, this function will discard
 // all bytes before the newline and return "". `bytes_read` will be 0.
+// 
+// If the file stream contains a line longer than 10^16 bytes, it will be discarded
+// and this function will return "" with `bytes_read` as 0.
 char *read_line(FILE *input, size_t *bytes_read) {
     char * read_buf = (char *) malloc(READ_BUF_SIZE * sizeof(char));
     size_t curr_buf_len = READ_BUF_SIZE;
@@ -53,6 +58,7 @@ char *read_line(FILE *input, size_t *bytes_read) {
         *bytes_read = strlen(read_buf);
         return read_buf;
     }
+    free(read_buf);
     *bytes_read = 0;
     return "";
 }

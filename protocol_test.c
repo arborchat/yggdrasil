@@ -89,6 +89,20 @@ void test_read_line_long(CuTest *tc) {
 	fclose(tempfile);
 }
 
+void test_read_line_too_long(CuTest *tc) {
+        const size_t buflen = 70000;
+        char long_string[buflen];
+        memset(long_string, 'a', buflen);
+        long_string[buflen-2] = '\n';
+        long_string[buflen-1] = '\0';
+        FILE *tempfile = prepare_tempfile(tc, long_string, strlen(long_string));
+	size_t num_read = -1;
+	char *message = read_line(tempfile, &num_read);
+	CuAssertStrEquals(tc, "", message);
+	CuAssertIntEquals(tc, 0, num_read);
+	fclose(tempfile);
+}
+
 CuSuite* ygg_get_protocol_suite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_read_line);
