@@ -71,10 +71,29 @@ void test_read_line_EOF(CuTest *tc) {
 	fclose(tempfile);
 }
 
+void test_read_line_long(CuTest *tc) {
+        const size_t buflen = 1536;
+        char long_string[buflen];
+        memset(long_string, 0, buflen);
+        unsigned int iterations = (buflen / strlen(YGG_WELCOME_TEXT));
+        for (unsigned int i = 0; i < iterations; i++) {
+            strncat(long_string, YGG_WELCOME_TEXT, buflen-2);
+        }
+        long_string[strlen(long_string)] = '\n';
+        FILE *tempfile = prepare_tempfile(tc, long_string, strlen(long_string));
+        long_string[strlen(long_string)-1] = '\0';
+	size_t num_read = -1;
+	char *message = read_line(tempfile, &num_read);
+	CuAssertStrEquals(tc, long_string, message);
+	CuAssertIntEquals(tc, strlen(long_string), num_read);
+	fclose(tempfile);
+}
+
 CuSuite* ygg_get_protocol_suite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_read_line);
     SUITE_ADD_TEST(suite, test_read_line_EOF);
     SUITE_ADD_TEST(suite, test_read_line_multi);
+    SUITE_ADD_TEST(suite, test_read_line_long);
     return suite;
 }
