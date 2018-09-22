@@ -12,7 +12,7 @@ for the time being. It's not useful yet.
 ## Dependencies
 
 Yggdrasil's Dependencies are all vendored with the exception of the C standard
-library. Yggdrasil is with against [MUSL Libc](http://www.musl-libc.org/), so the makefile tries to use that
+library. Yggdrasil is developed against [MUSL Libc](http://www.musl-libc.org/), so the makefile tries to use that
 by default. To build Yggdrasil, you'll either need to install the MUSL GCC wrapper
 or change the value of `CC` in the makefile to `CC=gcc`.
 
