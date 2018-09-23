@@ -6,9 +6,14 @@
 
 struct arbor_message {
     int type;
-    char *root;
     int major;
     int minor;
+    int timestamp;
+    char *root;
+    char *uuid;
+    char *parent;
+    char *content;
+    char *username;
     size_t recent_len;
     char **recent;
 }; 

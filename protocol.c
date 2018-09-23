@@ -130,6 +130,52 @@ _Bool extract_welcome(json_value *json, arbor_msg_t *msg) {
     return found_major && found_minor && found_root && found_recent;
 }
 
+// extract_new searches for the UUID, Parent, Content, Username, and Timestamp fields in the provided JSON
+// and extracts them into `msg`. It ignores other fields. It returns true if it found all of the
+// fields and false if it either failed to find a field or found a required field that had the wrong
+// type.
+_Bool extract_new(json_value *json, arbor_msg_t *msg) {
+    _Bool found_uuid = false;
+    _Bool found_parent = false;
+    _Bool found_content = false;
+    _Bool found_username = false;
+    _Bool found_timestamp = false;
+    for (unsigned int i = 0; i < json->u.object.length; i++) {
+        if (keys_match("UUID", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_string) {
+                return false;
+            }
+            msg->uuid = strndup(json->u.object.values[i].value->u.string.ptr, json->u.object.values[i].value->u.string.length);
+            found_uuid = true;
+        } else if (keys_match("Parent", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_string) {
+                return false;
+            }
+            msg->parent = strndup(json->u.object.values[i].value->u.string.ptr, json->u.object.values[i].value->u.string.length);
+            found_parent = true;
+        } else if (keys_match("Content", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_string) {
+                return false;
+            }
+            msg->content = strndup(json->u.object.values[i].value->u.string.ptr, json->u.object.values[i].value->u.string.length);
+            found_content = true;
+        } else if (keys_match("Username", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_string) {
+                return false;
+            }
+            msg->username = strndup(json->u.object.values[i].value->u.string.ptr, json->u.object.values[i].value->u.string.length);
+            found_username = true;
+        } else if (keys_match("Timestamp", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_integer) {
+                return false;
+            }
+            msg->timestamp= json->u.object.values[i].value->u.integer;
+            found_timestamp = true;
+        }
+    }
+    return found_uuid && found_parent && found_content && found_username && found_timestamp;
+}
+
 // parse_arbor_message extracts the JSON string in `text` into the struct
 // `msg`. It returns true if it succeeded and false if it failed.
 _Bool parse_arbor_message(char *text, arbor_msg_t* msg) {
@@ -154,6 +200,9 @@ _Bool parse_arbor_message(char *text, arbor_msg_t* msg) {
     switch (msg->type) {
         case ARBOR_WELCOME:
             result = extract_welcome(parsed, msg);
+            break;
+        case ARBOR_NEW:
+            result = extract_new(parsed, msg);
             break;
         default:
             goto parse_arbor_message_end;
