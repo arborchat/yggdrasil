@@ -66,7 +66,50 @@ char *read_line(FILE *input, size_t *bytes_read) {
     return "";
 }
 
+size_t sizemax(size_t a, size_t b) {
+    return a > b ? a : b;
+}
+
+_Bool keys_match(char* target, json_object_entry *key) {
+    return strncmp(key->name, target, sizemax(strlen(target), key->name_length)) == 0;
+}
+
+// extract_welcome searches for the Root, Major, Minor, and Recent fields in the provided JSON
+// and extracts them into `msg`. It ignores other fields. It returns true if it found all of the
+// fields and false if it either failed to find a field or found a required field that had the wrong
+// type.
 _Bool extract_welcome(json_value *json, arbor_msg_t *msg) {
+    _Bool found_root = false;
+    _Bool found_major = false;
+    _Bool found_minor = false;
+    _Bool found_recent = false;
+    for (unsigned int i = 0; i < json->u.object.length; i++) {
+        if (keys_match("Root", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_string) {
+                return false;
+            }
+            msg->root = strndup(json->u.object.values[i].value->u.string.ptr, json->u.object.values[i].value->u.string.length);
+            found_root = true;
+        } else if (keys_match("Major", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_integer) {
+                return false;
+            }
+            msg->major = json->u.object.values[i].value->u.integer;
+            found_major = true;
+        } else if (keys_match("Minor", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_integer) {
+                return false;
+            }
+            msg->minor = json->u.object.values[i].value->u.integer;
+            found_minor = true;
+        } else if (keys_match("Recent", &json->u.object.values[i])) {
+            if (json->u.object.values[i].value->type != json_array) {
+                return false;
+            }
+            found_recent = true;
+        }
+    }
+    return found_major && found_minor && found_root && found_recent;
 }
 
 // parse_arbor_message extracts the JSON string in `text` into the struct
@@ -79,7 +122,7 @@ _Bool parse_arbor_message(char *text, arbor_msg_t* msg) {
     }
     // find the message type
     for (unsigned int i = 0; i < parsed->u.object.length; i++) {
-        if (strncmp("Type",parsed->u.object.values[i].name, parsed->u.object.values[i].name_length) == 0) {
+        if (keys_match("Type", &parsed->u.object.values[i])) {
             if (parsed->u.object.values[i].value->type != json_integer) {
                 goto end;
             }
