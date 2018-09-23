@@ -108,13 +108,14 @@ void test_read_line_too_long(CuTest *tc) {
 #define TEST_MINOR 1
 #define TEST_MSG_ID "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 #define TEST_NULL_MSG_ID ""
-#define NO_RECENT_VALID_WELCOME "{\"Type\":%d,\"Major\":%d,\"Minor\":%d,\"Root\":\"%s\",\"Recent\":[%s]}" 
+#define NO_RECENT_VALID_WELCOME "{\"Type\":%d,\"Major\":%d,\"Minor\":%d,\"Root\":\"%s\",\"Recent\":[]}" 
+#define ONE_RECENT_VALID_WELCOME "{\"Type\":%d,\"Major\":%d,\"Minor\":%d,\"Root\":\"%s\",\"Recent\":[\"%s\"]}" 
 #define TEST_MSG_MAX_SIZE 1024
 
-void test_parse_welcome(CuTest *tc) {
+void test_parse_welcome_nullrecent(CuTest *tc) {
     char testmsg[TEST_MSG_MAX_SIZE];
     memset(testmsg, 0, TEST_MSG_MAX_SIZE);
-    sprintf(testmsg, NO_RECENT_VALID_WELCOME, ARBOR_WELCOME, TEST_MAJOR, TEST_MINOR, TEST_ROOT, "\"" TEST_NULL_MSG_ID "\"");
+    sprintf(testmsg, ONE_RECENT_VALID_WELCOME, ARBOR_WELCOME, TEST_MAJOR, TEST_MINOR, TEST_ROOT, TEST_NULL_MSG_ID);
     arbor_msg_t msg;
     memset(&msg, 0, sizeof(arbor_msg_t));
     CuAssertTrue(tc, parse_arbor_message(testmsg, &msg));
@@ -125,8 +126,41 @@ void test_parse_welcome(CuTest *tc) {
     CuAssertTrue(tc, msg.recent_len == 1);
     CuAssertPtrNotNull(tc, msg.recent);
     for (int i = 0; i < msg.recent_len; i++) {
-        CuAssertStrEquals(tc, "", msg.recent[i]);
+        CuAssertStrEquals(tc, TEST_NULL_MSG_ID, msg.recent[i]);
     }
+}
+
+void test_parse_welcome(CuTest *tc) {
+    char testmsg[TEST_MSG_MAX_SIZE];
+    memset(testmsg, 0, TEST_MSG_MAX_SIZE);
+    sprintf(testmsg, ONE_RECENT_VALID_WELCOME, ARBOR_WELCOME, TEST_MAJOR, TEST_MINOR, TEST_ROOT, TEST_MSG_ID);
+    arbor_msg_t msg;
+    memset(&msg, 0, sizeof(arbor_msg_t));
+    CuAssertTrue(tc, parse_arbor_message(testmsg, &msg));
+    CuAssertIntEquals(tc, ARBOR_WELCOME, msg.type);
+    CuAssertStrEquals(tc, TEST_ROOT, msg.root);
+    CuAssertIntEquals(tc, TEST_MAJOR, msg.major);
+    CuAssertIntEquals(tc, TEST_MINOR, msg.minor);
+    CuAssertTrue(tc, msg.recent_len == 1);
+    CuAssertPtrNotNull(tc, msg.recent);
+    for (int i = 0; i < msg.recent_len; i++) {
+        CuAssertStrEquals(tc, TEST_MSG_ID, msg.recent[i]);
+    }
+}
+
+void test_parse_welcome_norecent(CuTest *tc) {
+    char testmsg[TEST_MSG_MAX_SIZE];
+    memset(testmsg, 0, TEST_MSG_MAX_SIZE);
+    sprintf(testmsg, NO_RECENT_VALID_WELCOME, ARBOR_WELCOME, TEST_MAJOR, TEST_MINOR, TEST_ROOT);
+    arbor_msg_t msg;
+    memset(&msg, 0, sizeof(arbor_msg_t));
+    CuAssertTrue(tc, parse_arbor_message(testmsg, &msg));
+    CuAssertIntEquals(tc, ARBOR_WELCOME, msg.type);
+    CuAssertStrEquals(tc, TEST_ROOT, msg.root);
+    CuAssertIntEquals(tc, TEST_MAJOR, msg.major);
+    CuAssertIntEquals(tc, TEST_MINOR, msg.minor);
+    CuAssertTrue(tc, msg.recent_len == 0);
+    CuAssertPtrNotNull(tc, msg.recent);
 }
 
 CuSuite* ygg_get_protocol_suite() {
@@ -136,5 +170,7 @@ CuSuite* ygg_get_protocol_suite() {
     SUITE_ADD_TEST(suite, test_read_line_multi);
     SUITE_ADD_TEST(suite, test_read_line_long);
     SUITE_ADD_TEST(suite, test_parse_welcome);
+    SUITE_ADD_TEST(suite, test_parse_welcome_norecent);
+    SUITE_ADD_TEST(suite, test_parse_welcome_nullrecent);
     return suite;
 }
