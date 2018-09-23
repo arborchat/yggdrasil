@@ -109,8 +109,6 @@ _Bool extract_welcome(json_value *json, arbor_msg_t *msg) {
             json_value *arr = json->u.object.values[i].value;
             msg->recent_len = arr->u.array.length;
             msg->recent = calloc(sizeof(char *), msg->recent_len);
-            // ensure that every element of msg->recent starts out as NULL
-            memset(msg->recent, 0, sizeof(char *) * msg->recent_len);
             for (unsigned int k = 0; k < msg->recent_len; k++) {
                 if (arr->u.array.values[k]->type != json_string) {
                     // if it's not a string, it's invalid. Before returning, we must carefully
@@ -164,5 +162,17 @@ parse_arbor_message_end:
     json_value_free(parsed);
     return result;
 }
-// _Bool read_arbor_message(FILE *input, arbor_msg_t* msg) {
-// }
+
+_Bool read_arbor_message(FILE *input, arbor_msg_t* msg) {
+    _Bool succeeded = false;
+    size_t bytes_read = 0;
+    char *line = read_line(input, &bytes_read);
+    if (bytes_read < 1) {
+        return false;
+    }
+    if (parse_arbor_message(line, msg)) {
+        succeeded = true;
+    }
+    free(line);
+    return succeeded;
+}
