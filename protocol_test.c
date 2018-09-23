@@ -125,7 +125,7 @@ void test_parse_welcome_nullrecent(CuTest *tc) {
     CuAssertIntEquals(tc, TEST_MINOR, msg.minor);
     CuAssertTrue(tc, msg.recent_len == 1);
     CuAssertPtrNotNull(tc, msg.recent);
-    for (int i = 0; i < msg.recent_len; i++) {
+    for (unsigned int i = 0; i < msg.recent_len; i++) {
         CuAssertStrEquals(tc, TEST_NULL_MSG_ID, msg.recent[i]);
     }
 }
@@ -143,7 +143,7 @@ void test_parse_welcome(CuTest *tc) {
     CuAssertIntEquals(tc, TEST_MINOR, msg.minor);
     CuAssertTrue(tc, msg.recent_len == 1);
     CuAssertPtrNotNull(tc, msg.recent);
-    for (int i = 0; i < msg.recent_len; i++) {
+    for (unsigned int i = 0; i < msg.recent_len; i++) {
         CuAssertStrEquals(tc, TEST_MSG_ID, msg.recent[i]);
     }
 }
