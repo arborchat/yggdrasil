@@ -106,10 +106,14 @@ void test_read_line_too_long(CuTest *tc) {
 #define TEST_ROOT "abf07434-230c-4a69-5602-c3bdb6870954"
 #define TEST_MAJOR 0
 #define TEST_MINOR 1
+#define TEST_TIMESTAMP 2147483647
 #define TEST_MSG_ID "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 #define TEST_NULL_MSG_ID ""
+#define TEST_CONTENT "content"
+#define TEST_USERNAME "Yggdrasil"
 #define NO_RECENT_VALID_WELCOME "{\"Type\":%d,\"Major\":%d,\"Minor\":%d,\"Root\":\"%s\",\"Recent\":[]}" 
 #define ONE_RECENT_VALID_WELCOME "{\"Type\":%d,\"Major\":%d,\"Minor\":%d,\"Root\":\"%s\",\"Recent\":[\"%s\"]}" 
+#define VALID_NEW_MESSAGE "{\"Type\":%d,\"UUID\":\"%s\",\"Parent\":\"%s\",\"Content\":\"%s\",\"Username\":\"%s\",\"Timestamp\":%d}"
 #define TEST_MSG_MAX_SIZE 1024
 
 void test_parse_welcome_nullrecent(CuTest *tc) {
@@ -176,6 +180,22 @@ void test_parse_invalid_json(CuTest *tc) {
     CuAssertTrue(tc, msg.recent == NULL);
 }
 
+void test_parse_new(CuTest *tc) {
+    char testmsg[TEST_MSG_MAX_SIZE];
+    memset(testmsg, 0, TEST_MSG_MAX_SIZE);
+    sprintf(testmsg, VALID_NEW_MESSAGE, ARBOR_NEW, TEST_MSG_ID, TEST_ROOT, TEST_CONTENT, TEST_USERNAME, TEST_TIMESTAMP);
+    arbor_msg_t msg;
+    memset(&msg, 0, sizeof(arbor_msg_t));
+    CuAssertTrue(tc, parse_arbor_message(testmsg, &msg));
+    CuAssertIntEquals(tc, ARBOR_NEW, msg.type);
+    CuAssertStrEquals(tc, TEST_ROOT, msg.parent);
+    CuAssertStrEquals(tc, TEST_MSG_ID, msg.uuid);
+    CuAssertStrEquals(tc, TEST_USERNAME, msg.username);
+    CuAssertStrEquals(tc, TEST_CONTENT, msg.content);
+    CuAssertIntEquals(tc, TEST_TIMESTAMP, msg.timestamp);
+}
+
+
 CuSuite* ygg_get_protocol_suite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_read_line);
@@ -186,5 +206,6 @@ CuSuite* ygg_get_protocol_suite() {
     SUITE_ADD_TEST(suite, test_parse_welcome_norecent);
     SUITE_ADD_TEST(suite, test_parse_welcome_nullrecent);
     SUITE_ADD_TEST(suite, test_parse_invalid_json);
+    SUITE_ADD_TEST(suite, test_parse_new);
     return suite;
 }
