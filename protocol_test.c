@@ -163,6 +163,19 @@ void test_parse_welcome_norecent(CuTest *tc) {
     CuAssertPtrNotNull(tc, msg.recent);
 }
 
+void test_parse_invalid_json(CuTest *tc) {
+    const char *testmsg = NO_RECENT_VALID_WELCOME;
+    arbor_msg_t msg;
+    memset(&msg, 0, sizeof(arbor_msg_t));
+    CuAssertTrue(tc, !parse_arbor_message(testmsg, &msg));
+    CuAssertIntEquals(tc, 0, msg.type);
+    CuAssertStrEquals(tc, NULL, msg.root);
+    CuAssertIntEquals(tc, 0, msg.major);
+    CuAssertIntEquals(tc, 0, msg.minor);
+    CuAssertTrue(tc, msg.recent_len == 0);
+    CuAssertTrue(tc, msg.recent == NULL);
+}
+
 CuSuite* ygg_get_protocol_suite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_read_line);
@@ -172,5 +185,6 @@ CuSuite* ygg_get_protocol_suite() {
     SUITE_ADD_TEST(suite, test_parse_welcome);
     SUITE_ADD_TEST(suite, test_parse_welcome_norecent);
     SUITE_ADD_TEST(suite, test_parse_welcome_nullrecent);
+    SUITE_ADD_TEST(suite, test_parse_invalid_json);
     return suite;
 }

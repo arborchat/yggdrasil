@@ -25,7 +25,7 @@ typedef struct arbor_message arbor_msg_t;
 #define ARBOR_NEW 2
 
 char *read_line(FILE* input, size_t *bytes_read);
-_Bool parse_arbor_message(char *text, arbor_msg_t* msg);
+_Bool parse_arbor_message(const char *text, arbor_msg_t* msg);
 _Bool read_arbor_message(FILE *input, arbor_msg_t* msg);
 
 #endif // protocol_h_INCLUDED
