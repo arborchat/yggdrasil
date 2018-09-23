@@ -10,7 +10,7 @@ struct arbor_message {
     int major;
     int minor;
     size_t recent_len;
-    char *recent[];
+    char **recent;
 }; 
 
 typedef struct arbor_message arbor_msg_t;

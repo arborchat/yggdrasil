@@ -106,6 +106,26 @@ _Bool extract_welcome(json_value *json, arbor_msg_t *msg) {
             if (json->u.object.values[i].value->type != json_array) {
                 return false;
             }
+            json_value *arr = json->u.object.values[i].value;
+            msg->recent_len = arr->u.array.length;
+            msg->recent = calloc(sizeof(char *), msg->recent_len);
+            // ensure that every element of msg->recent starts out as NULL
+            memset(msg->recent, 0, sizeof(char *) * msg->recent_len);
+            for (unsigned int k = 0; k < msg->recent_len; k++) {
+                if (arr->u.array.values[k]->type != json_string) {
+                    // if it's not a string, it's invalid. Before returning, we must carefully
+                    // deallocate all of the memory that we might have allocated so far
+                    for (unsigned int m = 0; m < msg->recent_len; m++) {
+                        if (msg->recent[m] != NULL) {
+                            free(msg->recent[m]);
+                        }
+                    }
+                    free(msg->recent);
+                    return false;
+                }
+                // if we get here, the array element is a valid string
+                msg->recent[k] = strndup(arr->u.array.values[k]->u.string.ptr, arr->u.array.values[k]->u.string.length);
+            }
             found_recent = true;
         }
     }
