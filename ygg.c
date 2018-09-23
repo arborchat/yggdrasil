@@ -37,13 +37,10 @@ int main(int argc, char* argv[]) {
     printf("Connection successful\n");
 
     // communicate
-    size_t num_read;
     FILE *sockfile = fdopen(tcp_sock, "rw");
-    char *data = read_line(sockfile, &num_read);
-    printf("%s\n", data);
     arbor_msg_t message;
-    if (parse_arbor_message(data, &message)) {
-        printf("Type: %d\n", message.type);
+    if (read_arbor_message(sockfile, &message)) {
+        printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", message.type, message.major, message.minor, message.root, (int) message.recent_len);
     } else {
         printf("Message failed to parse\n");
     }
