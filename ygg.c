@@ -39,9 +39,12 @@ int main(int argc, char* argv[]) {
     // communicate
     FILE *sockfile = fdopen(tcp_sock, "rw");
     arbor_msg_t message;
-    if (read_arbor_message(sockfile, &message)) {
-        printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", message.type, message.major, message.minor, message.root, (int) message.recent_len);
-    } else {
-        printf("Message failed to parse\n");
+    while (read_arbor_message(sockfile, &message)) {
+        if (message.type == ARBOR_WELCOME) {
+            printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", message.type, message.major, message.minor, message.root, (int) message.recent_len);
+        } else if (message.type == ARBOR_NEW) {
+            printf("[%s]@%d %s:%s\n", message.uuid, message.timestamp, message.username, message.content);
+        }
     }
+    printf("Message failed to parse\n");
 }
