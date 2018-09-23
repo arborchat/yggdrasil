@@ -118,13 +118,13 @@ _Bool parse_arbor_message(char *text, arbor_msg_t* msg) {
     _Bool result = false;
     json_value *parsed = json_parse(text, strlen(text));
     if (parsed->type != json_object) {
-        goto end;
+        goto parse_arbor_message_end;
     }
     // find the message type
     for (unsigned int i = 0; i < parsed->u.object.length; i++) {
         if (keys_match("Type", &parsed->u.object.values[i])) {
             if (parsed->u.object.values[i].value->type != json_integer) {
-                goto end;
+                goto parse_arbor_message_end;
             }
             msg->type = parsed->u.object.values[i].value->u.integer;
             break;
@@ -135,9 +135,9 @@ _Bool parse_arbor_message(char *text, arbor_msg_t* msg) {
             result = extract_welcome(parsed, msg);
             break;
         default:
-            goto end;
+            goto parse_arbor_message_end;
     }
-end:
+parse_arbor_message_end:
     json_value_free(parsed);
     return result;
 }
