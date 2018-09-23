@@ -117,6 +117,9 @@ _Bool extract_welcome(json_value *json, arbor_msg_t *msg) {
 _Bool parse_arbor_message(char *text, arbor_msg_t* msg) {
     _Bool result = false;
     json_value *parsed = json_parse(text, strlen(text));
+    if (parsed == NULL) {
+        return false;
+    }
     if (parsed->type != json_object) {
         goto parse_arbor_message_end;
     }
