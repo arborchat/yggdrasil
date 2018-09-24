@@ -4,6 +4,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+// for strlen
+#include <string.h>
+
 // for htons and friends
 #include <arpa/inet.h>
 
@@ -43,7 +46,10 @@ int main(int argc, char* argv[]) {
         if (message.type == ARBOR_WELCOME) {
             printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", message.type, message.major, message.minor, message.root, (int) message.recent_len);
         } else if (message.type == ARBOR_NEW) {
-            printf("[%s]@%d %s:%s\n", message.uuid, message.timestamp, message.username, message.content);
+            printf("[%s]@%d %s: %s", message.uuid, message.timestamp, message.username, message.content);
+            if (message.content[strlen(message.content) -1] != '\n') {
+                printf("\n");
+            }
         }
     }
     printf("Message failed to parse\n");
