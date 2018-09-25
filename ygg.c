@@ -48,16 +48,19 @@ int main(int argc, char* argv[]) {
     // set up file monitoring
     struct pollfd fds[2];
     memset(&fds, 0, sizeof(struct pollfd)*2);
-    fds[0].fd = STDIN_FILENO;
-    fds[0].events = POLLIN;
-    fds[1].fd = tcp_sock;
-    fds[1].events = POLLIN;
+    #define INPUT_FD_INDEX 0
+    #define SOCKET_FD_INDEX 1
+    fds[INPUT_FD_INDEX].fd = STDIN_FILENO;
+    fds[INPUT_FD_INDEX].events = POLLIN;
+    fds[SOCKET_FD_INDEX].fd = tcp_sock;
+    fds[SOCKET_FD_INDEX].events = POLLIN;
 
     // communicate
     FILE *sockfile = fdopen(tcp_sock, "rw");
     arbor_msg_t message;
+    char * last_id = NULL;
     while (poll(fds, 2, -1)) {
-        if (fds[1].revents & POLLIN) {
+        if (fds[SOCKET_FD_INDEX].revents & POLLIN) {
             read_arbor_message(sockfile, &message);
             if (message.type == ARBOR_WELCOME) {
                 printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", message.type, message.major, message.minor, message.root, (int) message.recent_len);
@@ -66,7 +69,16 @@ int main(int argc, char* argv[]) {
                 if (message.content[strlen(message.content) -1] != '\n') {
                     printf("\n");
                 }
+                if (last_id != NULL) {
+                    free(last_id);
+                }
+                last_id = strdup(message.uuid);
             }
+        }
+        if (fds[INPUT_FD_INDEX].revents & POLLIN) {
+            size_t bytes_read = 0;
+            char *input = read_line(stdin, &bytes_read);
+            printf("Perparing to send \"%s\" in response to %s\n", input, last_id);
         }
     }
     printf("Message failed to parse\n");
