@@ -225,3 +225,6 @@ _Bool read_arbor_message(FILE *input, arbor_msg_t* msg) {
     free(line);
     return succeeded;
 }
+
+char *write_message(arbor_msg_t *msg, size_t *byte_written) {
+}

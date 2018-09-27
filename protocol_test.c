@@ -196,6 +196,25 @@ void test_parse_new(CuTest *tc) {
 }
 
 
+void test_write_new(CuTest *tc) {
+    arbor_msg_t msg;
+    memset(&msg, 0, sizeof(arbor_msg_t));
+    msg.type=ARBOR_NEW;
+    msg.timestamp=TEST_TIMESTAMP;
+    msg.uuid=TEST_MSG_ID;
+    msg.parent=TEST_ROOT;
+    msg.username=TEST_USERNAME;
+    msg.content=TEST_CONTENT;
+    size_t written = 0;
+    char *encoded = write_message(&msg, &written);
+    CuAssertPtrNotNull(tc, strstr(encoded, "\"Type\":2"));
+    CuAssertPtrNotNull(tc, strstr(encoded, "\"Timestamp\":2147483647"));
+    CuAssertPtrNotNull(tc, strstr(encoded, "\"UUID\":" TEST_MSG_ID));
+    CuAssertPtrNotNull(tc, strstr(encoded, "\"Parent\":" TEST_ROOT));
+    CuAssertPtrNotNull(tc, strstr(encoded, "\"Username\":" TEST_USERNAME));
+    CuAssertPtrNotNull(tc, strstr(encoded, "\"Type\":" TEST_CONTENT));
+}
+
 CuSuite* ygg_get_protocol_suite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_read_line);
@@ -207,5 +226,6 @@ CuSuite* ygg_get_protocol_suite() {
     SUITE_ADD_TEST(suite, test_parse_welcome_nullrecent);
     SUITE_ADD_TEST(suite, test_parse_invalid_json);
     SUITE_ADD_TEST(suite, test_parse_new);
+    SUITE_ADD_TEST(suite, test_write_new);
     return suite;
 }
