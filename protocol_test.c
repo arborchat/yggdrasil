@@ -256,6 +256,28 @@ void test_write_new_null_int(CuTest *tc) {
     CuAssertPtrNotNullMsg(tc, "UUID", strstr(encoded, testmsg));
 }
 
+void test_write_new_null_fields(CuTest *tc) {
+    char testmsg[TEST_MSG_MAX_SIZE];
+    memset(testmsg, 0, TEST_MSG_MAX_SIZE);
+    arbor_msg_t msg;
+    memset(&msg, 0, sizeof(arbor_msg_t));
+    msg.type=ARBOR_NEW;
+    msg.timestamp=TEST_TIMESTAMP;
+    char *encoded = write_message(&msg, NULL);
+    sprintf(testmsg, "\"Type\":%d", ARBOR_NEW);
+    CuAssertPtrNotNullMsg(tc, "Type", strstr(encoded, testmsg));
+    sprintf(testmsg, "\"Timestamp\":%d", TEST_TIMESTAMP);
+    CuAssertPtrNotNullMsg(tc, "Timestamp", strstr(encoded, testmsg));
+    sprintf(testmsg, "\"Parent\":\"\"");
+    CuAssertPtrNotNullMsg(tc, "Parent", strstr(encoded, testmsg));
+    sprintf(testmsg, "\"Username\":\"\"");
+    CuAssertPtrNotNullMsg(tc, "Username", strstr(encoded, testmsg));
+    sprintf(testmsg, "\"Content\":\"\"");
+    CuAssertPtrNotNullMsg(tc, "Content", strstr(encoded, testmsg));
+    sprintf(testmsg, "\"UUID\":\"\"");
+    CuAssertPtrNotNullMsg(tc, "UUID", strstr(encoded, testmsg));
+}
+
 CuSuite* ygg_get_protocol_suite() {
     CuSuite* suite = CuSuiteNew();
     SUITE_ADD_TEST(suite, test_read_line);
@@ -270,5 +292,6 @@ CuSuite* ygg_get_protocol_suite() {
     SUITE_ADD_TEST(suite, test_write_new);
     SUITE_ADD_TEST(suite, test_write_null);
     SUITE_ADD_TEST(suite, test_write_new_null_int);
+    SUITE_ADD_TEST(suite, test_write_new_null_fields);
     return suite;
 }
