@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
             message.content = input;
             message.username = "Yggdrasil";
             message.type = ARBOR_NEW;
-            printf("Perparing to send \n%s\n", write_message(&message, NULL));
+            printf("Perparing to send \n%s\n", marshal_message(&message, NULL));
         }
     }
     printf("Message failed to parse\n");

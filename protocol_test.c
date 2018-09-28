@@ -196,7 +196,7 @@ void test_parse_new(CuTest *tc) {
 }
 
 
-void test_write_new(CuTest *tc) {
+void test_marshal_new(CuTest *tc) {
     char testmsg[TEST_MSG_MAX_SIZE];
     memset(testmsg, 0, TEST_MSG_MAX_SIZE);
     arbor_msg_t msg;
@@ -208,7 +208,8 @@ void test_write_new(CuTest *tc) {
     msg.username=TEST_USERNAME;
     msg.content=TEST_CONTENT;
     size_t written = 0;
-    char *encoded = write_message(&msg, &written);
+    char *encoded = marshal_message(&msg, &written);
+    CuAssertPtrNotNull(tc, encoded);
     sprintf(testmsg, "\"Type\":%d", ARBOR_NEW);
     CuAssertPtrNotNullMsg(tc, "Type", strstr(encoded, testmsg));
     sprintf(testmsg, "\"Timestamp\":%d", TEST_TIMESTAMP);
@@ -223,14 +224,14 @@ void test_write_new(CuTest *tc) {
     CuAssertPtrNotNullMsg(tc, "UUID", strstr(encoded, testmsg));
 }
 
-void test_write_null(CuTest *tc) {
+void test_marshal_null(CuTest *tc) {
     size_t written = 0;
-    char *encoded = write_message(NULL, &written);
+    char *encoded = marshal_message(NULL, &written);
     CuAssertTrue(tc, encoded == NULL);
     CuAssertIntEquals(tc, 0, written);
 }
 
-void test_write_new_null_int(CuTest *tc) {
+void test_marshal_new_null_int(CuTest *tc) {
     char testmsg[TEST_MSG_MAX_SIZE];
     memset(testmsg, 0, TEST_MSG_MAX_SIZE);
     arbor_msg_t msg;
@@ -241,7 +242,8 @@ void test_write_new_null_int(CuTest *tc) {
     msg.parent=TEST_ROOT;
     msg.username=TEST_USERNAME;
     msg.content=TEST_CONTENT;
-    char *encoded = write_message(&msg, NULL);
+    char *encoded = marshal_message(&msg, NULL);
+    CuAssertPtrNotNull(tc, encoded);
     sprintf(testmsg, "\"Type\":%d", ARBOR_NEW);
     CuAssertPtrNotNullMsg(tc, "Type", strstr(encoded, testmsg));
     sprintf(testmsg, "\"Timestamp\":%d", TEST_TIMESTAMP);
@@ -256,26 +258,15 @@ void test_write_new_null_int(CuTest *tc) {
     CuAssertPtrNotNullMsg(tc, "UUID", strstr(encoded, testmsg));
 }
 
-void test_write_new_null_fields(CuTest *tc) {
+void test_marshal_new_null_fields(CuTest *tc) {
     char testmsg[TEST_MSG_MAX_SIZE];
     memset(testmsg, 0, TEST_MSG_MAX_SIZE);
     arbor_msg_t msg;
     memset(&msg, 0, sizeof(arbor_msg_t));
     msg.type=ARBOR_NEW;
     msg.timestamp=TEST_TIMESTAMP;
-    char *encoded = write_message(&msg, NULL);
-    sprintf(testmsg, "\"Type\":%d", ARBOR_NEW);
-    CuAssertPtrNotNullMsg(tc, "Type", strstr(encoded, testmsg));
-    sprintf(testmsg, "\"Timestamp\":%d", TEST_TIMESTAMP);
-    CuAssertPtrNotNullMsg(tc, "Timestamp", strstr(encoded, testmsg));
-    sprintf(testmsg, "\"Parent\":\"\"");
-    CuAssertPtrNotNullMsg(tc, "Parent", strstr(encoded, testmsg));
-    sprintf(testmsg, "\"Username\":\"\"");
-    CuAssertPtrNotNullMsg(tc, "Username", strstr(encoded, testmsg));
-    sprintf(testmsg, "\"Content\":\"\"");
-    CuAssertPtrNotNullMsg(tc, "Content", strstr(encoded, testmsg));
-    sprintf(testmsg, "\"UUID\":\"\"");
-    CuAssertPtrNotNullMsg(tc, "UUID", strstr(encoded, testmsg));
+    char *encoded = marshal_message(&msg, NULL);
+    CuAssertPtrEquals(tc, encoded, NULL);
 }
 
 CuSuite* ygg_get_protocol_suite() {
@@ -289,9 +280,9 @@ CuSuite* ygg_get_protocol_suite() {
     SUITE_ADD_TEST(suite, test_parse_welcome_nullrecent);
     SUITE_ADD_TEST(suite, test_parse_invalid_json);
     SUITE_ADD_TEST(suite, test_parse_new);
-    SUITE_ADD_TEST(suite, test_write_new);
-    SUITE_ADD_TEST(suite, test_write_null);
-    SUITE_ADD_TEST(suite, test_write_new_null_int);
-    SUITE_ADD_TEST(suite, test_write_new_null_fields);
+    SUITE_ADD_TEST(suite, test_marshal_new);
+    SUITE_ADD_TEST(suite, test_marshal_null);
+    SUITE_ADD_TEST(suite, test_marshal_new_null_int);
+    SUITE_ADD_TEST(suite, test_marshal_new_null_fields);
     return suite;
 }

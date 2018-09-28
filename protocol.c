@@ -227,35 +227,33 @@ _Bool read_arbor_message(FILE *input, arbor_msg_t* msg) {
     return succeeded;
 }
 
-char *write_message(arbor_msg_t *msg, size_t *byte_written) {
+char *marshal_message(arbor_msg_t *msg, size_t *bytes_written) {
+    size_t buf_len = 0;
+    json_char *buf = NULL;
     if (msg == NULL) {
-        if (byte_written != NULL) {
-            *byte_written = 0;
-        }
-        return NULL;
+        goto marshal_message_end;
     }
     // prepare the serializer
-    size_t buf_len = 0;
     json_serialize_opts opts;
     memset(&opts, 0, sizeof(json_serialize_opts));
     opts.mode = json_serialize_mode_packed;
-    json_char *buf = NULL;
     if (msg->type == ARBOR_NEW) {
+        // check required fields
+        if (msg->parent == NULL || msg->content == NULL) {
+            goto marshal_message_end;
+        }
         json_value *obj = json_object_new(0);
         json_object_push(obj, "Type", json_integer_new(ARBOR_NEW));
         json_object_push(obj, "Timestamp", json_integer_new(msg->timestamp));
+        // check optional fields
         if (msg->uuid != NULL) {
             json_object_push(obj, "UUID", json_string_new(msg->uuid));
-        }
-        if (msg->parent != NULL) {
-            json_object_push(obj, "Parent", json_string_new(msg->parent));
         }
         if (msg->username != NULL) {
             json_object_push(obj, "Username", json_string_new(msg->username));
         }
-        if (msg->content != NULL) {
-            json_object_push(obj, "Content", json_string_new(msg->content));
-        }
+        json_object_push(obj, "Content", json_string_new(msg->content));
+        json_object_push(obj, "Parent", json_string_new(msg->parent));
         buf_len = json_measure_ex(obj, opts);
         buf = malloc(buf_len);
         json_serialize_ex(buf, obj, opts);
@@ -266,8 +264,9 @@ char *write_message(arbor_msg_t *msg, size_t *byte_written) {
     } else {
         // unknown message type
     }
-    if (byte_written != NULL) {
-        *byte_written = buf_len;
+marshal_message_end:
+    if (bytes_written != NULL) {
+        *bytes_written = buf_len;
     }
     return buf;
 }
