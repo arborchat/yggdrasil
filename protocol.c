@@ -12,6 +12,10 @@
 
 // for json_parse and friends
 #include "json-parser/json.h"
+#include "json-builder/json-builder.h"
+
+// for time
+#include <time.h>
 
 #include "protocol.h"
 
@@ -227,4 +231,38 @@ _Bool read_arbor_message(FILE *input, arbor_msg_t* msg) {
 }
 
 char *write_message(arbor_msg_t *msg, size_t *byte_written) {
+    if (msg == NULL) {
+        if (byte_written != NULL) {
+            *byte_written = 0;
+        }
+        return NULL;
+    }
+    // prepare the serializer
+    size_t buf_len = 0;
+    json_serialize_opts opts;
+    memset(&opts, 0, sizeof(json_serialize_opts));
+    opts.mode = json_serialize_mode_packed;
+    json_char *buf = NULL;
+    if (msg->type == ARBOR_NEW) {
+        json_value *obj = json_object_new(0);
+        json_object_push(obj, "Type", json_integer_new(ARBOR_NEW));
+        json_object_push(obj, "Timestamp", json_integer_new(msg->timestamp));
+        json_object_push(obj, "UUID", json_string_new(msg->uuid));
+        json_object_push(obj, "Parent", json_string_new(msg->parent));
+        json_object_push(obj, "Username", json_string_new(msg->username));
+        json_object_push(obj, "Content", json_string_new(msg->content));
+        buf_len = json_measure_ex(obj, opts);
+        buf = malloc(buf_len);
+        json_serialize_ex(buf, obj, opts);
+    } else if (msg->type == ARBOR_QUERY) {
+        // TODO
+    } else if (msg->type == ARBOR_WELCOME) {
+        // unsupported message type, TODO
+    } else {
+        // unknown message type
+    }
+    if (byte_written != NULL) {
+        *byte_written = buf_len;
+    }
+    return buf;
 }
