@@ -13,6 +13,9 @@
 // for strlen
 #include <string.h>
 
+// for time
+#include <time.h>
+
 // for htons and friends
 #include <arpa/inet.h>
 
@@ -64,6 +67,7 @@ int main(int argc, char* argv[]) {
             read_arbor_message(sockfile, &message);
             if (message.type == ARBOR_WELCOME) {
                 printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", message.type, message.major, message.minor, message.root, (int) message.recent_len);
+                last_id = strdup(message.root);
             } else if (message.type == ARBOR_NEW) {
                 printf("[%s]@%d %s: %s", message.uuid, message.timestamp, message.username, message.content);
                 if (message.content[strlen(message.content) -1] != '\n') {
@@ -78,7 +82,12 @@ int main(int argc, char* argv[]) {
         if (fds[INPUT_FD_INDEX].revents & POLLIN) {
             size_t bytes_read = 0;
             char *input = read_line(stdin, &bytes_read);
-            printf("Perparing to send \"%s\" in response to %s\n", input, last_id);
+            message.parent = last_id;
+            message.timestamp = time(NULL);
+            message.content = input;
+            message.username = "Yggdrasil";
+            message.type = ARBOR_NEW;
+            printf("Perparing to send \n%s\n", write_message(&message, NULL));
         }
     }
     printf("Message failed to parse\n");
