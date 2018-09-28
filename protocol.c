@@ -14,9 +14,6 @@
 #include "json-parser/json.h"
 #include "json-builder/json-builder.h"
 
-// for time
-#include <time.h>
-
 #include "protocol.h"
 
 #define READ_BUF_SIZE 1024
@@ -247,10 +244,18 @@ char *write_message(arbor_msg_t *msg, size_t *byte_written) {
         json_value *obj = json_object_new(0);
         json_object_push(obj, "Type", json_integer_new(ARBOR_NEW));
         json_object_push(obj, "Timestamp", json_integer_new(msg->timestamp));
-        json_object_push(obj, "UUID", json_string_new(msg->uuid));
-        json_object_push(obj, "Parent", json_string_new(msg->parent));
-        json_object_push(obj, "Username", json_string_new(msg->username));
-        json_object_push(obj, "Content", json_string_new(msg->content));
+        if (msg->uuid != NULL) {
+            json_object_push(obj, "UUID", json_string_new(msg->uuid));
+        }
+        if (msg->parent != NULL) {
+            json_object_push(obj, "Parent", json_string_new(msg->parent));
+        }
+        if (msg->username != NULL) {
+            json_object_push(obj, "Username", json_string_new(msg->username));
+        }
+        if (msg->content != NULL) {
+            json_object_push(obj, "Content", json_string_new(msg->content));
+        }
         buf_len = json_measure_ex(obj, opts);
         buf = malloc(buf_len);
         json_serialize_ex(buf, obj, opts);
