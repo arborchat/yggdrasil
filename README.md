@@ -25,6 +25,14 @@ It is included in this repository as a git subtree.
 
 You can find the canonical repo [here](https://github.com/udp/json-parser).
 
+### Notes on `json-builder`
+
+This JSON-serializng library was chosen because it played so nicely with the parser above.
+
+It is included in this repository as a git subtree.
+
+You can find the canonical repo [here](https://github.com/udp/json-builder).
+
 ### Notes on `CuTest`
 
 This C test framework was chosen for simplicity. I have vendored it without a subtree
