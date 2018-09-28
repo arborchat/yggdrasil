@@ -80,14 +80,20 @@ int main(int argc, char* argv[]) {
             }
         }
         if (fds[INPUT_FD_INDEX].revents & POLLIN) {
-            size_t bytes_read = 0;
-            char *input = read_line(stdin, &bytes_read);
+            size_t bytes = 0;
+            char *input = read_line(stdin, &bytes);
+            char *output = NULL;
             message.parent = last_id;
             message.timestamp = time(NULL);
             message.content = input;
             message.username = "Yggdrasil";
             message.type = ARBOR_NEW;
-            printf("Perparing to send \n%s\n", marshal_message(&message, NULL));
+            bytes = 0;
+            output = marshal_message(&message, &bytes);
+            if (bytes >= 0) {
+                write(tcp_sock, output, bytes-1); // don't write the null byte
+                write(tcp_sock, "\n", 1);
+            }
         }
     }
     printf("Message failed to parse\n");
