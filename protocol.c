@@ -243,7 +243,7 @@ char *marshal_message(arbor_msg_t *msg, size_t *bytes_written) {
             goto marshal_message_end;
         }
         json_value *obj = json_object_new(0);
-        json_object_push(obj, "Type", json_integer_new(ARBOR_NEW));
+        json_object_push(obj, "Type", json_integer_new(msg->type));
         json_object_push(obj, "Timestamp", json_integer_new(msg->timestamp));
         // check optional fields
         if (msg->uuid != NULL) {
@@ -258,7 +258,16 @@ char *marshal_message(arbor_msg_t *msg, size_t *bytes_written) {
         buf = malloc(buf_len);
         json_serialize_ex(buf, obj, opts);
     } else if (msg->type == ARBOR_QUERY) {
-        // TODO
+        // check required fields
+        if (msg->uuid == NULL) {
+            goto marshal_message_end;
+        }
+        json_value *obj = json_object_new(0);
+        json_object_push(obj, "Type", json_integer_new(msg->type));
+        json_object_push(obj, "UUID", json_string_new(msg->uuid));
+        buf_len = json_measure_ex(obj, opts);
+        buf = malloc(buf_len);
+        json_serialize_ex(buf, obj, opts);
     } else if (msg->type == ARBOR_WELCOME) {
         // unsupported message type, TODO
     } else {
