@@ -20,6 +20,7 @@
 #include <arpa/inet.h>
 
 #include "protocol.h"
+#include "history.h"
 
 int main(int argc, char* argv[]) {
     int tcp_sock;
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
     fds[SOCKET_FD_INDEX].events = POLLIN;
 
     // communicate
+    history_t *history = make_history();
     FILE *sockfile = fdopen(tcp_sock, "rw");
     arbor_msg_t message;
     char * last_id = NULL;
@@ -69,7 +71,10 @@ int main(int argc, char* argv[]) {
                 printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", message.type, message.major, message.minor, message.root, (int) message.recent_len);
                 last_id = strdup(message.root);
             } else if (message.type == ARBOR_NEW) {
-                printf("[%s]@%d %s: %s", message.uuid, message.timestamp, message.username, message.content);
+                arbor_msg_t *received = malloc(sizeof(arbor_msg_t));
+                memcpy(received, &message, sizeof(arbor_msg_t));
+                size_t index = history_add(history, received);
+                printf("[%x]@%d %s: %s", (unsigned int) index, message.timestamp, message.username, message.content);
                 if (message.content[strlen(message.content) -1] != '\n') {
                     printf("\n");
                 }
