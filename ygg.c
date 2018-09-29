@@ -89,13 +89,23 @@ int main(int argc, char* argv[]) {
             char *input = read_line(stdin, &bytes);
             char *output = NULL;
             message.parent = last_id;
-            message.timestamp = time(NULL);
             message.content = input;
+            if (strncmp(input, "re:", 3) == 0) {
+		long int reply_to_index = strtol(input+4, NULL, 16);
+		arbor_msg_t *parent = history_get(history, reply_to_index);
+		if (parent != NULL) {
+                    message.parent = parent->uuid;
+		}
+		// ensure that the message contents do not contain the reply
+		// prefix by incrementing the string pointer past it.
+		message.content += (reply_to_index / 16) + 5;
+            }
+            message.timestamp = time(NULL);
             message.username = "Yggdrasil";
             message.type = ARBOR_NEW;
             bytes = 0;
             output = marshal_message(&message, &bytes);
-            if (bytes >= 0) {
+            if (bytes > 0) {
                 write(tcp_sock, output, bytes-1); // don't write the null byte
                 write(tcp_sock, "\n", 1);
             }
