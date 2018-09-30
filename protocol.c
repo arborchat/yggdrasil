@@ -178,8 +178,11 @@ _Bool extract_new(json_value *json, arbor_msg_t *msg) {
 }
 
 // parse_arbor_message extracts the JSON string in `text` into the struct
-// `msg`. It returns true if it succeeded and false if it failed.
+// `msg`. It returns true if it succeeded and false if it failed. All fields
+// in the provided message that are not parsed will be set to their zero
+// value.
 _Bool parse_arbor_message(const char *text, arbor_msg_t* msg) {
+    memset(msg, 0, sizeof(arbor_msg_t));
     _Bool result = false;
     json_value *parsed = json_parse(text, strlen(text));
     if (parsed == NULL) {
