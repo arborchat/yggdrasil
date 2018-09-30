@@ -27,6 +27,7 @@
 struct client {
     struct pollfd fds[2];
     history_t *history;
+    char *last_id;
 };
 
 typedef struct client client_t;
@@ -39,59 +40,77 @@ client_t *make_client(int stdin_fd, int sock_fd) {
     client->fds[SOCKET_FD_INDEX].fd = sock_fd;
     client->fds[SOCKET_FD_INDEX].events = POLLIN;
     client->history = make_history();
+    client->last_id = NULL;
     return client;
+}
+
+void update_last_id(client_t *client, char *new_id) {
+    if (client->last_id != NULL) {
+        free(client->last_id);
+    }
+    client->last_id = strdup(new_id);
+}
+
+void handle_sock_message(client_t *client, FILE *sockfile) {
+    arbor_msg_t stack_msg;
+    read_arbor_message(sockfile, &stack_msg);
+    if (stack_msg.type == ARBOR_WELCOME) {
+        printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", stack_msg.type, stack_msg.major, stack_msg.minor, stack_msg.root, (int) stack_msg.recent_len);
+        update_last_id(client, stack_msg.root);
+    } else if (stack_msg.type == ARBOR_NEW) {
+        arbor_msg_t *received = malloc(sizeof(arbor_msg_t));
+        memcpy(received, &stack_msg, sizeof(arbor_msg_t));
+        size_t index = history_add(client->history, received);
+        printf("[%x]@%d %s: %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, stack_msg.content);
+        if (stack_msg.content[strlen(stack_msg.content) -1] != '\n') {
+            printf("\n");
+        }
+        update_last_id(client, stack_msg.uuid);
+    }
+}
+
+void handle_stdin_message(client_t *client) {
+    arbor_msg_t stack_msg;
+    size_t bytes = 0;
+    char *input = read_line(stdin, &bytes);
+    char *output = NULL;
+    memset(&stack_msg, 0, sizeof(arbor_msg_t));
+    if (client->last_id == NULL) {
+        printf("unable to send message, no parent candidates\n");
+        free(input);
+        return;
+    }
+    stack_msg.parent = client->last_id;
+    stack_msg.content = input;
+    if (strncmp(input, "re:", 3) == 0) {
+    long int reply_to_index = strtol(input+4, NULL, 16);
+    arbor_msg_t *parent = history_get(client->history, reply_to_index);
+    if (parent != NULL) {
+            stack_msg.parent = parent->uuid;
+    }
+    // ensure that the stack_msg contents do not contain the reply
+    // prefix by incrementing the string pointer past it.
+    stack_msg.content += (reply_to_index / 16) + 5;
+    }
+    stack_msg.timestamp = time(NULL);
+    stack_msg.username = "Yggdrasil";
+    stack_msg.type = ARBOR_NEW;
+    bytes = 0;
+    output = marshal_message(&stack_msg, &bytes);
+    if (bytes > 0) {
+        write(client->fds[SOCKET_FD_INDEX].fd, output, bytes-1); // don't write the null byte
+        write(client->fds[SOCKET_FD_INDEX].fd, "\n", 1);
+    }
 }
 
 void handle_messages(client_t *client) {
     FILE *sockfile = fdopen(client->fds[SOCKET_FD_INDEX].fd, "rw");
-    arbor_msg_t stack_msg;
-    char * last_id = NULL;
     while (poll(client->fds, 2, -1)) {
         if (client->fds[SOCKET_FD_INDEX].revents & POLLIN) {
-            read_arbor_message(sockfile, &stack_msg);
-            if (stack_msg.type == ARBOR_WELCOME) {
-                printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", stack_msg.type, stack_msg.major, stack_msg.minor, stack_msg.root, (int) stack_msg.recent_len);
-                last_id = strdup(stack_msg.root);
-            } else if (stack_msg.type == ARBOR_NEW) {
-                arbor_msg_t *received = malloc(sizeof(arbor_msg_t));
-                memcpy(received, &stack_msg, sizeof(arbor_msg_t));
-                size_t index = history_add(client->history, received);
-                printf("[%x]@%d %s: %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, stack_msg.content);
-                if (stack_msg.content[strlen(stack_msg.content) -1] != '\n') {
-                    printf("\n");
-                }
-                if (last_id != NULL) {
-                    free(last_id);
-                }
-                last_id = strdup(stack_msg.uuid);
-            }
+            handle_sock_message(client, sockfile);
         }
         if (client->fds[INPUT_FD_INDEX].revents & POLLIN) {
-            size_t bytes = 0;
-            char *input = read_line(stdin, &bytes);
-            char *output = NULL;
-            memset(&stack_msg, 0, sizeof(arbor_msg_t));
-            stack_msg.parent = last_id;
-            stack_msg.content = input;
-            if (strncmp(input, "re:", 3) == 0) {
-		long int reply_to_index = strtol(input+4, NULL, 16);
-		arbor_msg_t *parent = history_get(client->history, reply_to_index);
-		if (parent != NULL) {
-                    stack_msg.parent = parent->uuid;
-		}
-		// ensure that the stack_msg contents do not contain the reply
-		// prefix by incrementing the string pointer past it.
-		stack_msg.content += (reply_to_index / 16) + 5;
-            }
-            stack_msg.timestamp = time(NULL);
-            stack_msg.username = "Yggdrasil";
-            stack_msg.type = ARBOR_NEW;
-            bytes = 0;
-            output = marshal_message(&stack_msg, &bytes);
-            if (bytes > 0) {
-                write(client->fds[SOCKET_FD_INDEX].fd, output, bytes-1); // don't write the null byte
-                write(client->fds[SOCKET_FD_INDEX].fd, "\n", 1);
-            }
+            handle_stdin_message(client);
         }
     }
 }
