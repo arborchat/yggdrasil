@@ -4,6 +4,9 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+// for struct addrinfo
+#include <netdb.h>
+
 // for STDIN_FILENO
 #include <unistd.h>
 
@@ -115,29 +118,48 @@ void handle_messages(client_t *client) {
     }
 }
 
-int main(int argc, char* argv[]) {
+// dial attempts to connect to the given hostname and port. It returns a valid file
+// descriptor for a connected socket on success, and a negative number on failure.
+int dial(char *hostname, char *port) {
     int tcp_sock;
     struct sockaddr_in addr;
-    printf("Welcome to Yggdrasil!\n");
+    struct addrinfo hints;
+    struct addrinfo *resolve_results, *resolve_current;
 
     // create socket
     tcp_sock = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_sock < 0) {
         perror("socket");
-        exit(1);
+        return -1;
     }
 
     // configure server address information
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(7777);
-    if (1 != inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr)) {
+    addr.sin_port = htons(atoi(port));
+    if (1 != inet_pton(AF_INET, hostname, &addr.sin_addr)) {
         perror("Invalid IP");
-        exit(1);
+        return -2;
     }
 
     // connect to server
     if (0 != connect(tcp_sock, (struct sockaddr*) &addr, sizeof(struct sockaddr_in))) {
         perror("Failed to connect to server");
+        return -3;
+    }
+    return tcp_sock;
+}
+
+int main(int argc, char* argv[]) {
+    int tcp_sock;
+    printf("Welcome to Yggdrasil!\n");
+
+    if (argc < 3) {
+        printf("Usage: ygg <hostname> <port>\n");
+        exit(1);
+    }
+    tcp_sock = dial(argv[1], argv[2]);
+    if (tcp_sock < 0) {
+        printf("Unable to connect\n");
         exit(1);
     }
     printf("Connection successful\n");
