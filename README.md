@@ -33,6 +33,15 @@ It is included in this repository as a git subtree.
 
 You can find the canonical repo [here](https://github.com/udp/json-builder).
 
+### Notes on `c_hashmap`
+
+This is a simple C implementation of a generic hashmap data structure. I've used it for other
+projects and it seems good enough for my needs.
+
+It is included in this repository as a git subtree.
+
+You can find the canonical repo [here](https://github.com/petewarden/c_hashmap).
+
 ### Notes on `CuTest`
 
 This C test framework was chosen for simplicity. I have vendored it without a subtree
