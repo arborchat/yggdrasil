@@ -1,7 +1,7 @@
 CC=musl-gcc
 CFLAGS=-static -g -pedantic -Wall -Wextra
 MAIN_OBJ=ygg.o
-OBJS=json-parser/json.o json-builder/json-builder.o protocol.o history.o
+OBJS=json-parser/json.o json-builder/json-builder.o c_hashmap/hashmap.o protocol.o history.o
 BUILD_OBJS=$(MAIN_OBJ) $(OBJS)
 TEST_OBJS=./cutest-1.5/CuTest.o protocol_test.o test.o $(OBJS)
 
@@ -19,6 +19,8 @@ ygg.o: ygg.c json-parser/json.h
 json.o: json-parser/json.c json-parser/json.h
 
 json-builder.o: json-builder/json-builder.c json-builder/json-builder.h
+
+hashmap.o: c_hashmap/hashmap.c c_hashmap/hashmap.h
 
 # Testing
 test: ygg-tester
