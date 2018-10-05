@@ -64,7 +64,12 @@ void handle_sock_message(client_t *client, FILE *sockfile) {
         arbor_msg_t *received = malloc(sizeof(arbor_msg_t));
         memcpy(received, &stack_msg, sizeof(arbor_msg_t));
         size_t index = history_add(client->history, received);
-        printf("[%x]@%d %s: %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, stack_msg.content);
+        long parent_idx = history_get_id(client->history, stack_msg.parent);
+        if (parent_idx >= 0) {
+            printf("[%x]@%d %s:re:%x %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, (unsigned int) parent_idx, stack_msg.content);
+        } else {
+            printf("[%x]@%d %s: %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, stack_msg.content);
+        }
         if (stack_msg.content[strlen(stack_msg.content) -1] != '\n') {
             printf("\n");
         }
@@ -87,7 +92,7 @@ void handle_stdin_message(client_t *client) {
     stack_msg.content = input;
     if (strncmp(input, "re:", 3) == 0) {
     long int reply_to_index = strtol(input+4, NULL, 16);
-    arbor_msg_t *parent = history_get(client->history, reply_to_index);
+    arbor_msg_t *parent = history_get_idx(client->history, reply_to_index);
     if (parent != NULL) {
             stack_msg.parent = parent->uuid;
     }
