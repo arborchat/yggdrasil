@@ -66,9 +66,9 @@ void handle_sock_message(client_t *client, FILE *sockfile) {
         size_t index = history_add(client->history, received);
         long parent_idx = history_get_id(client->history, stack_msg.parent);
         if (parent_idx >= 0) {
-            printf("[%x]@%d %s:re:%x %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, (unsigned int) parent_idx, stack_msg.content);
+            printf("[%x]@%d %s|re:%x %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, (unsigned int) parent_idx, stack_msg.content);
         } else {
-            printf("[%x]@%d %s: %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, stack_msg.content);
+            printf("[%x]@%d %s| %s", (unsigned int) index, stack_msg.timestamp, stack_msg.username, stack_msg.content);
         }
         if (stack_msg.content[strlen(stack_msg.content) -1] != '\n') {
             printf("\n");
@@ -77,6 +77,8 @@ void handle_sock_message(client_t *client, FILE *sockfile) {
     }
 }
 
+#define REPLY_PREFIX "re:"
+#define REPLY_PREFIX_LEN 3
 void handle_stdin_message(client_t *client) {
     arbor_msg_t stack_msg;
     size_t bytes = 0;
@@ -90,15 +92,15 @@ void handle_stdin_message(client_t *client) {
     }
     stack_msg.parent = client->last_id;
     stack_msg.content = input;
-    if (strncmp(input, "re:", 3) == 0) {
-    long int reply_to_index = strtol(input+4, NULL, 16);
-    arbor_msg_t *parent = history_get_idx(client->history, reply_to_index);
-    if (parent != NULL) {
-            stack_msg.parent = parent->uuid;
-    }
-    // ensure that the stack_msg contents do not contain the reply
-    // prefix by incrementing the string pointer past it.
-    stack_msg.content += (reply_to_index / 16) + 5;
+    if (strncmp(input, REPLY_PREFIX, REPLY_PREFIX_LEN) == 0) {
+        long int reply_to_index = strtol(input+REPLY_PREFIX_LEN, NULL, 16);
+        arbor_msg_t *parent = history_get_idx(client->history, reply_to_index);
+        if (parent != NULL) {
+                stack_msg.parent = parent->uuid;
+        }
+        // ensure that the stack_msg contents do not contain the reply
+        // prefix by incrementing the string pointer past it.
+        stack_msg.content += (reply_to_index / 16) + 5;
     }
     stack_msg.timestamp = time(NULL);
     stack_msg.username = "Yggdrasil";
