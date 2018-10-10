@@ -56,10 +56,33 @@ void update_last_id(client_t *client, char *new_id) {
 
 void handle_sock_message(client_t *client, FILE *sockfile) {
     arbor_msg_t stack_msg;
+    arbor_msg_t query_msg;
+    size_t bytes;
+    char *output;
     read_arbor_message(sockfile, &stack_msg);
     if (stack_msg.type == ARBOR_WELCOME) {
         printf("Type: %d Major: %d Minor: %d Root: %s Recent_Len: %d\n", stack_msg.type, stack_msg.major, stack_msg.minor, stack_msg.root, (int) stack_msg.recent_len);
         update_last_id(client, stack_msg.root);
+        memset(&query_msg, 0, sizeof(arbor_msg_t));
+        query_msg.type = ARBOR_QUERY;
+        query_msg.uuid = stack_msg.root;
+        bytes = 0;
+        output = marshal_message(&query_msg, &bytes);
+        if (bytes > 0) {
+            write(client->fds[SOCKET_FD_INDEX].fd, output, bytes-1); // don't write the null byte
+            write(client->fds[SOCKET_FD_INDEX].fd, "\n", 1);
+        }
+        for (size_t i = 0; i < stack_msg.recent_len; i++) {
+            memset(&query_msg, 0, sizeof(arbor_msg_t));
+            query_msg.type = ARBOR_QUERY;
+            query_msg.uuid = stack_msg.recent[i];
+            bytes = 0;
+            output = marshal_message(&query_msg, &bytes);
+            if (bytes > 0) {
+                write(client->fds[SOCKET_FD_INDEX].fd, output, bytes-1); // don't write the null byte
+                write(client->fds[SOCKET_FD_INDEX].fd, "\n", 1);
+            }
+        }
     } else if (stack_msg.type == ARBOR_NEW) {
         arbor_msg_t *received = malloc(sizeof(arbor_msg_t));
         memcpy(received, &stack_msg, sizeof(arbor_msg_t));
@@ -73,6 +96,7 @@ void handle_sock_message(client_t *client, FILE *sockfile) {
         if (stack_msg.content[strlen(stack_msg.content) -1] != '\n') {
             printf("\n");
         }
+        fflush(stdout);
         update_last_id(client, stack_msg.uuid);
     }
 }
