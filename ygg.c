@@ -4,6 +4,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include <fcntl.h>
+
 // for struct addrinfo
 #include <netdb.h>
 
@@ -139,9 +141,14 @@ void handle_stdin_message(client_t *client) {
 
 void handle_messages(client_t *client) {
     FILE *sockfile = fdopen(client->fds[SOCKET_FD_INDEX].fd, "rw");
+    int c;
     while (poll(client->fds, 2, -1)) {
         if (client->fds[SOCKET_FD_INDEX].revents & POLLIN) {
-            handle_sock_message(client, sockfile);
+            do {
+                // read until no more data is available
+                handle_sock_message(client, sockfile);
+                c = getc(sockfile);
+            } while (c > 0 && ungetc(c, sockfile));
         }
         if (client->fds[INPUT_FD_INDEX].revents & POLLIN) {
             handle_stdin_message(client);
@@ -177,6 +184,8 @@ int dial(char *hostname, char *port) {
         perror("Failed to connect to server");
         return -3;
     }
+    // set the socket for non-blocking I/O
+    fcntl(tcp_sock, F_SETFL, fcntl(tcp_sock, F_GETFL) | O_NONBLOCK);
     return tcp_sock;
 }
 
