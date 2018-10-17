@@ -6,8 +6,7 @@ simple (in use and implementation), light, and reliable.
 
 ## Status
 
-Yggdrasil just connects to the server and spits out a copy of the welcome message
-for the time being. It's not useful yet.
+Yggdrasil can connect to an arbor server, display recent messages, and reply to any message that it has recieved. It's not particularly elegant right now, but we hope to change that.
 
 ## Dependencies
 
@@ -61,3 +60,5 @@ Run `make test` to build and run the tests.
 ## Use
 
 If you have arbor running locally, just type `./ygg`.
+
+If you want to connect to a remote server, `./ygg <IPv4_ADDR> <PORT>`.
