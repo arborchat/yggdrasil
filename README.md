@@ -1,8 +1,8 @@
 # Yggdrasil
 
-This is an arbor chat client. As [arbor](https://github.com/whereswaldon/arbor) is an experimental chat protocol,
-this client is pretty experimental itself. It has the goal of being
-simple (in use and implementation), light, and reliable.
+This is an arbor chat client for the proof-of-concept protocol.
+
+You can find information about the Arbor project [here](https://man.sr.ht/~whereswaldon/arborchat/)
 
 ## Status
 
